@@ -17,12 +17,12 @@ namespace Presentation.Web.Server
 
         public WorkflowStarter(IServiceProvider serviceProvider)
         {
-            _serviceProvider = serviceProvider;
+            this._serviceProvider = serviceProvider;
         }
 
         public async Task StartAsync(CancellationToken cancellationToken)
         {
-            using var scope = _serviceProvider.CreateScope();
+            using var scope = this._serviceProvider.CreateScope();
             var workflowRunner = scope.ServiceProvider.GetRequiredService<IWorkflowRunner>();
             await workflowRunner.RunWorkflowAsync<T>(correlationId: Guid.NewGuid().ToString("N"), cancellationToken: cancellationToken);
         }

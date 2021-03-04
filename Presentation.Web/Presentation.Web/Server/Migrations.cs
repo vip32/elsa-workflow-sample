@@ -7,8 +7,8 @@ namespace Presentation.Web.Server
     {
         public int Create()
         {
-            SchemaBuilder.CreateMapIndexTable<DemoHttpWorkflowContextIndex>(table =>
-                table.Column<string>(nameof(DemoHttpWorkflowContextIndex.Uid)));
+            this.SchemaBuilder.CreateMapIndexTable<WorkflowStateIndex>(table =>
+                table.Column<string>(nameof(WorkflowStateIndex.StateId)));
             return 1;
         }
     }

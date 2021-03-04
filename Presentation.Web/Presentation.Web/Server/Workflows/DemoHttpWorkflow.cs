@@ -27,8 +27,8 @@ namespace Presentation.Web.Server
 
         public DemoHttpWorkflow(IClock clock)
         {
-            _clock = clock;
-            _timeOut = Duration.FromSeconds(10);
+            this._clock = clock;
+            this._timeOut = Duration.FromSeconds(10);
         }
 
         public void Build(IWorkflowBuilder builder)
@@ -37,23 +37,22 @@ namespace Presentation.Web.Server
 
             builder
                 // The workflow context type of this workflow
-                .WithContextType<DemoHttpWorkflowContext>()
+                .WithContextType<WorkflowState>()
 
                 // Accept HTTP requests to submit new orders
                 .HttpEndpoint(activity => activity.WithPath("/_workflows/demo").WithMethod(HttpMethods.Post).WithTargetType<Order>()).WithName("HttpRequest")
 
                 // Store the order in the workflow context. It will be saved automatically when the workflow gets suspended
                 .Then(context => context.SetWorkflowContext(
-                    new DemoHttpWorkflowContext
+                    new WorkflowState
                     {
                         CorrelationId = Guid.NewGuid().ToString("N"),
-                        Order = context.GetOutputFrom<HttpRequestModel>("HttpRequest").GetBody<Order>(),
-                        Comments = new List<Comment>()
+                        Order = context.GetOutputFrom<HttpRequestModel>("HttpRequest").GetBody<Order>()
                     })).LoadWorkflowContext()
 
                 // Correlate the workflow.
-                .Correlate(context => ((DemoHttpWorkflowContext)context.WorkflowExecutionContext.WorkflowContext!).CorrelationId)
-                .WriteLine(context => $"CorrelationId={GetCorrelationId(context)}")
+                .Correlate(context => ((WorkflowState)context.WorkflowExecutionContext.WorkflowContext!).CorrelationId)
+                .WriteLine(context => $"CorrelationId={this.GetCorrelationId(context)}")
 
                 // Log then new order
                 .WriteLine(context => $"Received order for {GetOrder(context).Name} ({GetOrder(context).Email})")
@@ -74,7 +73,7 @@ namespace Presentation.Web.Server
                         return serializer.Serialize(model);
                     }))
 
-                .WriteLine(context => $"The demo completes in {_timeOut.ToString()} ({_clock.GetCurrentInstant().Plus(_timeOut)}). Can't wait that long? Send me the secret \"hurry\" signal! (http://localhost:7304/signal/hurry/trigger?correlationId={GetCorrelationId(context)})")
+                .WriteLine(context => $"The demo completes in {this._timeOut.ToString()} ({this._clock.GetCurrentInstant().Plus(this._timeOut)}). Can't wait that long? Send me the secret \"hurry\" signal! (http://localhost:7304/signal/hurry/trigger?correlationId={this.GetCorrelationId(context)})")
                 .Then<Fork>(
                     fork => fork.WithBranches("Approve", "Reject", "Timer"),
                     fork =>
@@ -107,19 +106,19 @@ namespace Presentation.Web.Server
 
                         fork
                             .When("Timer")
-                            .Timer(_timeOut)
+                            .Timer(this._timeOut)
                             .SetVariable("RejectedBy", "Timer")
                             .Then(StoreApproveTimeoutComment)
-                            .WriteLine(context => $"WORKFLOW {GetCorrelationId(context)}  {GetOrder(context).Id} TIMEOUT--")
+                            .WriteLine(context => $"WORKFLOW {this.GetCorrelationId(context)}  {GetOrder(context).Id} TIMEOUT--")
                             .Then("Join");
 
                         WriteApproveResponse(approveBranch, order => $"Thanks for approving document {order.Id}!")
-                            .WriteLine(context => $"WORKFLOW {GetCorrelationId(context)} {GetOrder(context).Id} APPROVED++ (UserId={context.GetVariable<string>("UserId")})")
+                            .WriteLine(context => $"WORKFLOW {this.GetCorrelationId(context)} {GetOrder(context).Id} APPROVED++ (UserId={context.GetVariable<string>("UserId")})")
                             .SetVariable("ApprovedBy", "User")
                             .Then("Join");
                         //.Then(join);
                         WriteApproveResponse(rejectBranch, order => $"Thanks for rejecting document {order.Id}!")
-                            .WriteLine(context => $"WORKFLOW {GetCorrelationId(context)}  {GetOrder(context).Id} REJECTED-- (UserId={context.GetVariable<string>("UserId")})")
+                            .WriteLine(context => $"WORKFLOW {this.GetCorrelationId(context)}  {GetOrder(context).Id} REJECTED-- (UserId={context.GetVariable<string>("UserId")})")
                             .SetVariable("ApprovedBy", "User")
                             .Then("Join");
                         //.Then(join);
@@ -143,25 +142,29 @@ namespace Presentation.Web.Server
                 //    })
                 //.Add<Join>(x => x.WithMode(Join.JoinMode.WaitAny)).WithName("Join")
                 .WriteLine(context => $"Finished order for {GetOrder(context).Name} ({GetOrder(context).Email})")
-                .WriteLine(context => $"Demo {GetCorrelationId(context)} (OrderId={context.GetVariable<string>("OrderId")}) completed successfully via {context.GetVariable<string>("CompletedVia")}!");
+                .WriteLine(context => $"Demo {this.GetCorrelationId(context)} (OrderId={context.GetVariable<string>("OrderId")}) completed successfully via {context.GetVariable<string>("CompletedVia")}!");
         }
 
         private string GetCorrelationId(ActivityExecutionContext context) => context.WorkflowExecutionContext.CorrelationId;
 
-        private static Order GetOrder(ActivityExecutionContext context) => context.GetWorkflowContext<DemoHttpWorkflowContext>().Order;
+        private static WorkflowState GetState(ActivityExecutionContext context) => context.GetWorkflowContext<WorkflowState>();
+
+        private static Order GetOrder(ActivityExecutionContext context) => GetState(context).Order;
+
+        private static ICollection<Comment> GetComments(ActivityExecutionContext context) => GetState(context).Comments;
 
         private static void StoreComment(ActivityExecutionContext context)
         {
-            var workflowContext = (DemoHttpWorkflowContext)context.WorkflowExecutionContext.WorkflowContext!;
+            var state = (WorkflowState)context.WorkflowExecutionContext.WorkflowContext!;
             var comment = (Comment)((HttpRequestModel)context.Input!).Body!;
-            workflowContext.Comments.Add(comment);
+            state.Comments.Add(comment);
         }
 
         private static void StoreApproveTimeoutComment(ActivityExecutionContext context)
         {
-            var workflowContext = (DemoHttpWorkflowContext)context.WorkflowExecutionContext.WorkflowContext!;
+            var state = (WorkflowState)context.WorkflowExecutionContext.WorkflowContext!;
             var comment = new Comment { Text = "timout", Author = "timer" };
-            workflowContext.Comments.Add(comment);
+            state.Comments.Add(comment);
         }
 
         private static IActivityBuilder WriteApproveResponse(IBuilder builder, Func<Order, string> html) =>

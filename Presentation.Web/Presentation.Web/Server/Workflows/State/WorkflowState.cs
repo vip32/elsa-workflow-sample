@@ -2,7 +2,7 @@
 
 namespace Presentation.Web.Server
 {
-    public class DemoHttpWorkflowContext
+    public class WorkflowState
     {
         public string Id { get; set; }
 

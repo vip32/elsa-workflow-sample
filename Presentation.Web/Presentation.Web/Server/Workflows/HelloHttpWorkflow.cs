@@ -24,7 +24,7 @@ namespace Presentation.Web.Server
             builder
                 .HttpEndpoint("/_workflows/hello")
                 .WriteLine(context =>
-                    $"Hello from Elsa! (correlationId={GetCorrelationId(context)})")
+                    $"Hello from Elsa! (correlationId={this.GetCorrelationId(context)})")
                 .WriteHttpResponse(HttpStatusCode.OK, $"Hello from Elsa!", "text/html");
         }
 

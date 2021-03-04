@@ -341,3 +341,5 @@ healthchecksdb
 #doctoolchain
 .gradle
 docs/build
+
+Presentation.Web/Presentation.Web/Server/elsa.db
