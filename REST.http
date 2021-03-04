@@ -1,0 +1,38 @@
+###
+# start hello http workflow
+GET https://localhost:5001/_workflows/hello
+
+############################################################################
+# start demo http workflow
+# @name create_demo_workflow
+POST https://localhost:5001/_workflows/demo
+Content-Type: application/json
+
+{
+    "id": "{{$randomInt 2100000 2199999}}",
+    "name": "John Doe",
+    "email": "john.doe@gmail.com"
+}
+
+###
+@correlation_id = {{create_demo_workflow.response.headers.CorrelationId}}
+
+############################################################################
+# approve order with comment
+POST https://localhost:5001/_workflows/demo/approve?correlation={{correlation_id}}
+Content-Type: application/json
+
+{
+    "author": "Jason",
+    "text": "Great job!"
+}
+
+############################################################################
+# reject order with comment
+POST https://localhost:5001/_workflows/demo/approve?correlation={{correlation_id}}
+Content-Type: application/json
+
+{
+    "author": "Jason",
+    "text": "Not so good!"
+}
