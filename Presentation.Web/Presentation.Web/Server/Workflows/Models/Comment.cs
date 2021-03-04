@@ -9,6 +9,6 @@ namespace Presentation.Web.Server
 
         public string Text { get; set; } = default!;
 
-        public Instant Timestamp { get; set; } = Instant.FromDateTimeUtc(DateTime.UtcNow);
+        public Instant CreatedAt { get; set; } = Instant.FromDateTimeUtc(DateTime.UtcNow);
     }
 }

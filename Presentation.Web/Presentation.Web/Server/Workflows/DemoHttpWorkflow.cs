@@ -22,13 +22,13 @@ namespace Presentation.Web.Server
     /// </summary>
     public class DemoHttpWorkflow : IWorkflow
     {
-        private readonly IClock _clock;
-        private readonly Duration _timeOut;
+        private readonly IClock clock;
+        private readonly Duration timeOut;
 
         public DemoHttpWorkflow(IClock clock)
         {
-            this._clock = clock;
-            this._timeOut = Duration.FromSeconds(10);
+            this.clock = clock;
+            this.timeOut = Duration.FromSeconds(10);
         }
 
         public void Build(IWorkflowBuilder builder)
@@ -59,8 +59,8 @@ namespace Presentation.Web.Server
                 .WriteLine(context => $"Received order details: {JsonConvert.SerializeObject(GetOrder(context))}")
 
                 // Save some variables
-                .SetVariable("OrderId", context => GetOrder(context).Id)
-                .SetVariable("Status", DemoHttpWorkflowStatus.New)
+                .SetVariable("OrderId", context => GetOrder(context).Id) // not needed > state
+                .SetVariable("Status", DemoHttpWorkflowStatus.New) // not needed > state
 
                 .WriteHttpResponse(activity => activity
                     .WithStatusCode(HttpStatusCode.Accepted)
@@ -73,7 +73,7 @@ namespace Presentation.Web.Server
                         return serializer.Serialize(model);
                     }))
 
-                .WriteLine(context => $"The demo completes in {this._timeOut.ToString()} ({this._clock.GetCurrentInstant().Plus(this._timeOut)}). Can't wait that long? Send me the secret \"hurry\" signal! (http://localhost:7304/signal/hurry/trigger?correlationId={this.GetCorrelationId(context)})")
+                .WriteLine(context => $"The demo completes in {this.timeOut.ToString()} ({this.clock.GetCurrentInstant().Plus(this.timeOut)}). Can't wait that long? Send me the secret \"hurry\" signal! (http://localhost:7304/signal/hurry/trigger?correlationId={this.GetCorrelationId(context)})")
                 .Then<Fork>(
                     fork => fork.WithBranches("Approve", "Reject", "Timer"),
                     fork =>
@@ -82,6 +82,7 @@ namespace Presentation.Web.Server
                             .When("Approve")
                             .ReceiveHttpPostRequest<Comment>(context => $"/_workflows/demo/approve") // ?correlation=GUID
                             .Then(StoreComment)
+                            .Then(context => StoreStatus(context, DemoHttpWorkflowStatus.Approved))
                             //.Then(ThrowErrorIfFinished)
                             .If(
                                 context => context.GetVariable<bool>("IsProcessed"),
@@ -95,6 +96,7 @@ namespace Presentation.Web.Server
                             .When("Reject")
                             .ReceiveHttpPostRequest<Comment>(context => $"/_workflows/demo/reject") // ?correlation=GUID
                             .Then(StoreComment)
+                            .Then(context => StoreStatus(context, DemoHttpWorkflowStatus.Rejected))
                             //.Then(ThrowErrorIfFinished)
                             .If(
                                 context => context.GetVariable<bool>("IsProcessed"),
@@ -106,9 +108,10 @@ namespace Presentation.Web.Server
 
                         fork
                             .When("Timer")
-                            .Timer(this._timeOut)
+                            .Timer(this.timeOut)
                             .SetVariable("RejectedBy", "Timer")
                             .Then(StoreApproveTimeoutComment)
+                            .Then(context => StoreStatus(context, DemoHttpWorkflowStatus.Rejected))
                             .WriteLine(context => $"WORKFLOW {this.GetCorrelationId(context)}  {GetOrder(context).Id} TIMEOUT--")
                             .Then("Join");
 
@@ -153,6 +156,12 @@ namespace Presentation.Web.Server
 
         private static ICollection<Comment> GetComments(ActivityExecutionContext context) => GetState(context).Comments;
 
+        private static void StoreStatus(ActivityExecutionContext context, DemoHttpWorkflowStatus status)
+        {
+            var state = (WorkflowState)context.WorkflowExecutionContext.WorkflowContext!;
+            state.Status = status;
+        }
+
         private static void StoreComment(ActivityExecutionContext context)
         {
             var state = (WorkflowState)context.WorkflowExecutionContext.WorkflowContext!;
@@ -185,7 +194,10 @@ namespace Presentation.Web.Server
     public enum DemoHttpWorkflowStatus
     {
         New,
-        Checked,
+        Approved,
+        Rejected,
+        Processed,
+        Shipped,
         Delivered
     }
 }

@@ -20,12 +20,12 @@ namespace Presentation.Web.Server
             this.idGenerator = idGenerator;
         }
 
-        public override async ValueTask<WorkflowState?> LoadAsync(
+        public override async ValueTask<WorkflowState> LoadAsync(
             LoadWorkflowContext context,
             CancellationToken cancellationToken = default) =>
                 await this.session.Query<WorkflowState, WorkflowStateIndex>(x => x.StateId == context.ContextId).FirstOrDefaultAsync();
 
-        public override ValueTask<string?> SaveAsync(
+        public override ValueTask<string> SaveAsync(
             SaveWorkflowContext<WorkflowState> context,
             CancellationToken cancellationToken = default)
         {

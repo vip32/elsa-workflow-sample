@@ -11,6 +11,6 @@ namespace Presentation.Web.Server
 
         public string Email { get; set; }
 
-        public Instant Timestamp { get; set; } = Instant.FromDateTimeUtc(DateTime.UtcNow);
+        public Instant CreatedAt { get; set; } = Instant.FromDateTimeUtc(DateTime.UtcNow);
     }
 }
