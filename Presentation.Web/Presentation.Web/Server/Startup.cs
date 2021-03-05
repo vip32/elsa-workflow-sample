@@ -37,9 +37,8 @@ namespace Presentation.Web.Server
                     .AddConsoleActivities()
                     .AddHttpActivities()
                     .AddQuartzTemporalActivities()
-                    .AddWorkflow<HelloHttpWorkflow>()
-                    .AddWorkflow<DemoHttpWorkflow>()
-                    .AddWorkflow<DemoWorkflow>()                )
+                    .AddActivitiesFrom<Program>()
+                    .AddWorkflowsFrom<Program>())
                 .AddDataMigration<Migrations>()
                 .AddIndexProvider<WorkflowStateIndexProvider>()
                 .AddWorkflowContextProvider<WorkflowStateProvider>(); ;
