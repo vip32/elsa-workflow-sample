@@ -33,28 +33,31 @@ namespace Presentation.Web.Server
 
         public void Build(IWorkflowBuilder builder)
         {
-            var serializer = builder.ServiceProvider.GetRequiredService<IContentSerializer>();
+            //var serializer = builder.ServiceProvider.GetRequiredService<IContentSerializer>();
 
             builder
                 // The workflow context type of this workflow
                 .WithContextType<WorkflowState>()
 
                 // Accept HTTP requests to submit new orders
-                .HttpEndpoint(activity => activity.WithPath("/_workflows/demo").WithMethod(HttpMethods.Post).WithTargetType<Order>()).WithName("HttpRequest")
+                //.HttpEndpoint(activity => activity
+                //    .WithPath("/_workflows/demo")
+                //    .WithMethod(HttpMethods.Post)
+                //    .WithTargetType<Order>()).WithName("HttpRequest")
 
-                // Store the order in the workflow context. It will be saved automatically when the workflow gets suspended
+                // Store the order in the wokflow state. It will be saved automatically when the workflow gets suspended
                 .Then(context => context.SetWorkflowContext(
                     new WorkflowState
                     {
-                        CorrelationId = Guid.NewGuid().ToString("N"),
-                        Order = context.GetOutputFrom<HttpRequestModel>("HttpRequest").GetBody<Order>()
+                        CorrelationId = context.CorrelationId, // ((WorkflowState)context.WorkflowExecutionContext.WorkflowContext!).CorrelationId, //Guid.NewGuid().ToString("N"),
+                        Order = context.GetInput<Order>() //context.GetOutputFrom<HttpRequestModel>("HttpRequest").GetBody<Order>()
                     })).LoadWorkflowContext()
 
                 // Correlate the workflow.
                 .Correlate(context => ((WorkflowState)context.WorkflowExecutionContext.WorkflowContext!).CorrelationId)
-                .WriteLine(context => $"CorrelationId={this.GetCorrelationId(context)}")
 
                 // Log then new order
+                .WriteLine(context => $"CorrelationId={this.GetCorrelationId(context)}")
                 .WriteLine(context => $"Received order for {GetOrder(context).Name} ({GetOrder(context).Email})")
                 .WriteLine(context => $"Received order details: {JsonConvert.SerializeObject(GetOrder(context))}")
 
@@ -62,16 +65,17 @@ namespace Presentation.Web.Server
                 .SetVariable("OrderId", context => GetOrder(context).Id) // not needed > state
                 .SetVariable("Status", DemoHttpWorkflowStatus.New) // not needed > state
 
-                .WriteHttpResponse(activity => activity
-                    .WithStatusCode(HttpStatusCode.Accepted)
-                    .WithContentType("application/json")
-                    .WithResponseHeaders(context => new HttpResponseHeaders() { ["CorrelationId"] = context.CorrelationId })
-                    .WithContent(context =>
-                    {
-                        var request = context.GetOutputFrom<HttpRequestModel>("HttpRequest");
-                        var model = request.GetBody<Order>();
-                        return serializer.Serialize(model);
-                    }))
+                //.WriteHttpResponse(activity => activity
+                //    .WithStatusCode(HttpStatusCode.Accepted)
+                //    .WithContentType("application/json")
+                //    .WithResponseHeaders(context => new HttpResponseHeaders() { ["CorrelationId"] = context.CorrelationId })
+                //    .WithContent(context =>
+                //    {
+                //        //var request = context.GetOutputFrom<HttpRequestModel>("HttpRequest");
+                //        //var model = request.GetBody<Order>();
+                //        //return serializer.Serialize(model);
+                //        return serializer.Serialize(GetState(context));
+                //    }))
 
                 .WriteLine(context => $"The demo completes in {this.timeOut.ToString()} ({this.clock.GetCurrentInstant().Plus(this.timeOut)}). Can't wait that long? Send me the secret \"hurry\" signal! (http://localhost:7304/signal/hurry/trigger?correlationId={this.GetCorrelationId(context)})")
                 .Then<Fork>(

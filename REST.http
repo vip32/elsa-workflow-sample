@@ -2,10 +2,29 @@
 # start hello http workflow
 GET https://localhost:5001/_workflows/hello
 
+###
+# start hello http workflow
+POST https://localhost:5001/launch
+Content-Type: application/json
+
+{
+    "id": "{{$randomInt 2100000 2199999}}",
+    "name": "John Doe",
+    "email": "john.doe@gmail.com"
+}
+
+############################################################################
+# get workflow instances
+GET https://localhost:5001/_workflows
+
+############################################################################
+# get workflow instance
+GET https://localhost:5001/_workflows/{{create_demo_workflow.response.headers.CorrelationId}}
+
 ############################################################################
 # start demo http workflow
 # @name create_demo_workflow
-POST https://localhost:5001/_workflows/demo
+POST https://localhost:5001/_workflows/demo/start
 Content-Type: application/json
 
 {
