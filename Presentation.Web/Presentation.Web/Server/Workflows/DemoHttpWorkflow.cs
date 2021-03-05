@@ -82,10 +82,11 @@ namespace Presentation.Web.Server
                     fork => fork.WithBranches("Approve", "Reject", "Timer"),
                     fork =>
                     {
-                        var approveBranch = fork
+                        fork
                             .When("Approve")
                             //.ReceiveHttpPostRequest<Comment>(context => $"/_workflows/demo/approve") // ?correlation=GUID
                             .SignalReceived("approve")
+                            .WriteLine(context => $"WORKFLOW {this.GetCorrelationId(context)} {GetOrder(context).Id} APPROVED++ (UserId={context.GetVariable<string>("UserId")})")
                             .Then(StoreComment)
                             .Then(context => StoreStatus(context, DemoHttpWorkflowStatus.Approved))
                             //.Then(ThrowErrorIfFinished)
@@ -95,12 +96,14 @@ namespace Presentation.Web.Server
                                 whenFalse => whenFalse
                                     .SetVariable("IsProcessed", true)
                                     .WriteLine("++++++++++++ CONTINUE2"))
-                            .WriteLine(context => $"APPROVED: {GetOrder(context).Id}");
+                            .WriteLine(context => $"APPROVED: {GetOrder(context).Id}")
+                            .Then("Join");
 
-                        var rejectBranch = fork
+                        fork
                             .When("Reject")
                             //.ReceiveHttpPostRequest<Comment>(context => $"/_workflows/demo/reject") // ?correlation=GUID
                             .SignalReceived("reject")
+                            .WriteLine(context => $"WORKFLOW {this.GetCorrelationId(context)}  {GetOrder(context).Id} REJECTED-- (UserId={context.GetVariable<string>("UserId")})")
                             .Then(StoreComment)
                             .Then(context => StoreStatus(context, DemoHttpWorkflowStatus.Rejected))
                             //.Then(ThrowErrorIfFinished)
@@ -110,46 +113,19 @@ namespace Presentation.Web.Server
                                 whenFalse => whenFalse
                                     .SetVariable("IsProcessed", true)
                                     .WriteLine("++++++++++++ CONTINUE2"))
-                            .WriteLine(context => $"REJECTED: {GetOrder(context).Id}");
+                            .WriteLine(context => $"REJECTED: {GetOrder(context).Id}")
+                            .Then("Join");
 
                         fork
                             .When("Timer")
                             .Timer(this.timeOut)
+                            .WriteLine(context => $"WORKFLOW {this.GetCorrelationId(context)}  {GetOrder(context).Id} TIMEOUT--")
                             .SetVariable("RejectedBy", "Timer")
                             .Then(StoreApproveTimeoutComment)
                             .Then(context => StoreStatus(context, DemoHttpWorkflowStatus.Rejected))
-                            .WriteLine(context => $"WORKFLOW {this.GetCorrelationId(context)}  {GetOrder(context).Id} TIMEOUT--")
                             .Then("Join");
-
-                        WriteApproveResponse(approveBranch, order => $"Thanks for approving document {order.Id}!")
-                            .WriteLine(context => $"WORKFLOW {this.GetCorrelationId(context)} {GetOrder(context).Id} APPROVED++ (UserId={context.GetVariable<string>("UserId")})")
-                            .SetVariable("ApprovedBy", "User")
-                            .Then("Join");
-                        //.Then(join);
-                        WriteApproveResponse(rejectBranch, order => $"Thanks for rejecting document {order.Id}!")
-                            .WriteLine(context => $"WORKFLOW {this.GetCorrelationId(context)}  {GetOrder(context).Id} REJECTED-- (UserId={context.GetVariable<string>("UserId")})")
-                            .SetVariable("ApprovedBy", "User")
-                            .Then("Join");
-                        //.Then(join);
                     })
                 .Add<Join>(x => x.WithMode(Join.JoinMode.WaitAny)).WithName("Join")
-                //.Then<Fork>(
-                //    fork => fork.WithBranches("Timer", "Signal"),
-                //    fork =>
-                //    {
-                //        fork
-                //            .When("Timer")
-                //            .Timer(_timeOut)
-                //            .SetVariable("CompletedVia", "Timer")
-                //            .Then("Join");
-
-                //        fork
-                //            .When("Signal")
-                //            .SignalReceived("hurry")
-                //            .SetVariable("CompletedVia", "Signal")
-                //            .Then("Join");
-                //    })
-                //.Add<Join>(x => x.WithMode(Join.JoinMode.WaitAny)).WithName("Join")
                 .WriteLine(context => $"Finished order for {GetOrder(context).Name} ({GetOrder(context).Email})")
                 .WriteLine(context => $"Demo {this.GetCorrelationId(context)} (OrderId={context.GetVariable<string>("OrderId")}) completed successfully via {context.GetVariable<string>("CompletedVia")}!");
         }

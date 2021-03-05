@@ -38,7 +38,7 @@ Content-Type: application/json
 
 ############################################################################
 # approve order with comment
-POST https://localhost:5001/_workflows/demo/approve?correlation={{correlation_id}}
+POST https://localhost:5001/_workflows/demo/approve?correlationId={{correlation_id}}
 Content-Type: application/json
 
 {
@@ -48,7 +48,7 @@ Content-Type: application/json
 
 ############################################################################
 # reject order with comment
-POST https://localhost:5001/_workflows/demo/approve?correlation={{correlation_id}}
+POST https://localhost:5001/_workflows/demo/approve?correlationId={{correlation_id}}
 Content-Type: application/json
 
 {

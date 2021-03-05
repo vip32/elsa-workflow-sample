@@ -60,5 +60,22 @@ namespace Presentation.Web.Server.Controllers
             this.Response.Headers.Add("CorrelationId", correlationId);
             return new EmptyResult();
         }
+
+        [HttpPost]
+        [Route("reject")]
+        public async Task<IActionResult> SignalReject([FromBody] Comment model, [FromQuery] string correlationId, CancellationToken cancellationToken = default)
+        {
+            if (model == null)
+            {
+                this.Response.StatusCode = StatusCodes.Status400BadRequest;
+                return new EmptyResult();
+            }
+
+            await this.signaler.SendSignalAsync("reject", input: model, correlationId: correlationId, cancellationToken: cancellationToken);
+
+            this.Response.StatusCode = StatusCodes.Status202Accepted;
+            this.Response.Headers.Add("CorrelationId", correlationId);
+            return new EmptyResult();
+        }
     }
 }
