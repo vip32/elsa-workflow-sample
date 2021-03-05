@@ -25,9 +25,8 @@ namespace Presentation.Web.Server
         {
             services
                 .AddElsa(options => options
-                    .UseYesSqlPersistence()
-                    //.UseYesSqlPersistence(c =>
-                    //    c.UseSqLite("Data Source=elsa_ys.db;Cache=Shared"))
+                    .UseYesSqlPersistence(c =>
+                        c.UseSqLite("Data Source=elsa_ys.db;Cache=Shared"))
                     //.UseEntityFrameworkPersistence(c =>
                     //{
                     //    c.UseSqlite(

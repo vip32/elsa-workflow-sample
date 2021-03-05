@@ -343,3 +343,5 @@ healthchecksdb
 docs/build
 
 Presentation.Web/Presentation.Web/Server/elsa.db
+Presentation.Web/Presentation.Web/Server/elsa_ys.db
+Presentation.Web/Presentation.Web/Server/elsa_ef.db
