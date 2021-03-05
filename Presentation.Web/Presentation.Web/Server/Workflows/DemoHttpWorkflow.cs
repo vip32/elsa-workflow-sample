@@ -84,7 +84,8 @@ namespace Presentation.Web.Server
                     {
                         var approveBranch = fork
                             .When("Approve")
-                            .ReceiveHttpPostRequest<Comment>(context => $"/_workflows/demo/approve") // ?correlation=GUID
+                            //.ReceiveHttpPostRequest<Comment>(context => $"/_workflows/demo/approve") // ?correlation=GUID
+                            .SignalReceived("approve")
                             .Then(StoreComment)
                             .Then(context => StoreStatus(context, DemoHttpWorkflowStatus.Approved))
                             //.Then(ThrowErrorIfFinished)
@@ -98,7 +99,8 @@ namespace Presentation.Web.Server
 
                         var rejectBranch = fork
                             .When("Reject")
-                            .ReceiveHttpPostRequest<Comment>(context => $"/_workflows/demo/reject") // ?correlation=GUID
+                            //.ReceiveHttpPostRequest<Comment>(context => $"/_workflows/demo/reject") // ?correlation=GUID
+                            .SignalReceived("reject")
                             .Then(StoreComment)
                             .Then(context => StoreStatus(context, DemoHttpWorkflowStatus.Rejected))
                             //.Then(ThrowErrorIfFinished)
@@ -169,7 +171,7 @@ namespace Presentation.Web.Server
         private static void StoreComment(ActivityExecutionContext context)
         {
             var state = (WorkflowState)context.WorkflowExecutionContext.WorkflowContext!;
-            var comment = (Comment)((HttpRequestModel)context.Input!).Body!;
+            var comment = context.GetInput<Comment>();//(Comment)((HttpRequestModel)context.Input!).Body!;
             state.Comments.Add(comment);
         }
 
