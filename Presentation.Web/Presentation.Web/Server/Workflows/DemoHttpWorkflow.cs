@@ -7,6 +7,7 @@
     using Elsa.Services.Models;
     using Newtonsoft.Json;
     using NodaTime;
+    using System;
     using System.Collections.Generic;
 
     public class DemoHttpWorkflow : IWorkflow
@@ -38,7 +39,7 @@
                 .Correlate(context => ((WorkflowState)context.WorkflowExecutionContext.WorkflowContext!).CorrelationId)
 
                 // Log then new order
-                .LogInformation(context => $"order received (correlationId={this.GetCorrelationId(context)}, name={GetOrder(context).Name}, email={GetOrder(context).Email})")
+                .LogInformation(context => $"order received (name={GetOrder(context).Name}, email={GetOrder(context).Email})")
                 //.LogInformation(context => $"order details: {JsonConvert.SerializeObject(GetOrder(context))}")
                 .LogInformation(context => $"order approval completes in {this.timeOut} ({this.clock.GetCurrentInstant().Plus(this.timeOut)}). Can't wait that long? Send me the secret \"hurry\" signal! (https://localhost:5001/_workflows/demo/approve?correlationId={this.GetCorrelationId(context)})")
 
@@ -49,39 +50,29 @@
                         fork
                             .When("Approve")
                             .SignalReceived("approve")
-                            .LogInformation(context => $"WORKFLOW {this.GetCorrelationId(context)} {GetOrder(context).Id} APPROVED++ (UserId={context.GetVariable<string>("UserId")})")
+                            .Then(ThrowErrorWhenStatusNotNew)
+                            .LogInformation(context => $"WORKFLOW {GetOrder(context).Id} APPROVED++ (UserId={context.GetVariable<string>("UserId")})")
                             .Then(context => StoreStatus(context, DemoHttpWorkflowStatus.Approved))
                             .Then(StoreComment)
                             //.Then(ThrowErrorIfFinished)
-                            .If(
-                                context => context.GetVariable<bool>("IsProcessed"),
-                                whenTrue => whenTrue.LogInformation("++++++++++++ STOP"), //throw new Exception("Something bad happened. Please retry workflow."),
-                                whenFalse => whenFalse
-                                    .SetVariable("IsProcessed", true)
-                                    .LogInformation("++++++++++++ CONTINUE2"))
                             .LogInformation(context => $"APPROVED: {GetOrder(context).Id}")
                             .Then("Join");
 
                         fork
                             .When("Reject")
                             .SignalReceived("reject")
-                            .LogInformation(context => $"WORKFLOW {this.GetCorrelationId(context)} {GetOrder(context).Id} REJECTED-- (UserId={context.GetVariable<string>("UserId")})")
+                            .Then(ThrowErrorWhenStatusNotNew)
+                            .LogInformation(context => $"WORKFLOW {GetOrder(context).Id} REJECTED-- (UserId={context.GetVariable<string>("UserId")})")
                             .Then(context => StoreStatus(context, DemoHttpWorkflowStatus.Rejected))
                             .Then(StoreComment)
                             //.Then(ThrowErrorIfFinished)
-                            .If(
-                                context => context.GetVariable<bool>("IsProcessed"),
-                                whenTrue => whenTrue.LogInformation("++++++++++++ STOP"), //throw new Exception("Something bad happened. Please retry workflow."),
-                                whenFalse => whenFalse
-                                    .SetVariable("IsProcessed", true)
-                                    .LogInformation("++++++++++++ CONTINUE2"))
                             .LogInformation(context => $"REJECTED: {GetOrder(context).Id}")
                             .Then("Join");
 
                         fork
                             .When("Timer")
                             .Timer(this.timeOut)
-                            .LogInformation(context => $"WORKFLOW {this.GetCorrelationId(context)}  {GetOrder(context).Id} TIMEOUT--")
+                            .LogInformation(context => $"WORKFLOW {GetOrder(context).Id} TIMEOUT--")
                             .Then(context => StoreStatus(context, DemoHttpWorkflowStatus.Rejected))
                             .Then(StoreApproveTimeoutComment)
                             .SetVariable("RejectedBy", "Timer")
@@ -89,7 +80,6 @@
                     })
                 .Add<Join>(x => x.WithMode(Join.JoinMode.WaitAny)).WithName("Join")
                 .LogInformation(context => $"Finished order for {GetOrder(context).Name} ({GetOrder(context).Email}, Status={GetState(context).Status})")
-                .LogInformation(context => $"Demo {this.GetCorrelationId(context)} (OrderId={context.GetVariable<string>("OrderId")}) completed successfully via {context.GetVariable<string>("CompletedVia")}!")
                 .Finish();
         }
 
@@ -119,6 +109,15 @@
             var state = (WorkflowState)context.WorkflowExecutionContext.WorkflowContext!;
             var comment = new Comment { Text = "timout", Author = "timer" };
             state.Comments.Add(comment);
+        }
+
+        private static void ThrowErrorWhenStatusNotNew(ActivityExecutionContext context)
+        {
+            var canApprove = GetState(context).Status == DemoHttpWorkflowStatus.New;
+            if (!canApprove)
+            {
+                throw new Exception($"Cannot approve/reject with order status {GetState(context).Status}");
+            }
         }
     }
 }
