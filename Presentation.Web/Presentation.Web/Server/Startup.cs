@@ -40,7 +40,7 @@ namespace Presentation.Web.Server
                     //        "Data Source=elsa_ef.db;Cache=Shared",
                     //        db => db.MigrationsAssembly(typeof(SqliteElsaContextFactory).Assembly.GetName().Name));
                     //}, true)
-                    //.UseEntityFrameworkPersistence(c => 
+                    //.UseEntityFrameworkPersistence(c => // works fine but needs another implementation of the WorkflowStateProvider
                     //{
                     //    c.UseSqlServer(
                     //        "Server=127.0.0.1,14338;Database=elsa;User=sa;Password=Abcd1234!;Trusted_Connection=false;",
@@ -57,11 +57,11 @@ namespace Presentation.Web.Server
                     .AddEmailActivities(this.Configuration.GetSection("Elsa").GetSection("Smtp").Bind)
                     .AddQuartzTemporalActivities()
                     .AddActivitiesFrom<Program>()
-                    .AddWorkflowsFrom<Program>())
-                .AddDataMigration<Migrations>()
-                .AddIndexProvider<WorkflowStateIndexProvider>()
-                .AddWorkflowContextProvider<WorkflowStateProvider>();
-                //.AddHostedService<WorkflowStarter<DemoWorkflow>>();
+                    .AddWorkflowsFrom<Program>());
+                //.AddDataMigration<Migrations>() // yessql
+                //.AddIndexProvider<WorkflowStateIndexProvider>() yessql
+                //.AddWorkflowContextProvider<WorkflowStateProvider>(); yessql
+                //.AddHostedService<WorkflowStarter<DemoWorkflow>>(); yessql
 
             services
                 .AddElsaApiEndpoints()
