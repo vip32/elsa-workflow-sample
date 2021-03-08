@@ -21,6 +21,7 @@
     <PackageReference Include="Serilog.Sinks.File" Version="4.1.0" />
     <PackageReference Include="Serilog.Sinks.Seq" Version="5.0.0" />
     <PackageReference Include="Serilog.Sinks.Trace" Version="2.1.0" />
+    <PackageReference Include="YesSql.Provider.SqlServer" Version="1.0.0-beta-1637" />
   </ItemGroup>
 
   <ItemGroup>

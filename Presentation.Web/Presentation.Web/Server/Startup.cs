@@ -9,6 +9,7 @@ using Elsa.Persistence.EntityFramework.Core.Extensions;
 using Elsa.Persistence.EntityFramework.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using YesSql.Provider.Sqlite;
+using YesSql.Provider.SqlServer;
 using ElsaDashboard.Backend.Extensions;
 using System;
 using Elsa.Persistence.EntityFramework.SqlServer;
@@ -31,13 +32,15 @@ namespace Presentation.Web.Server
                 .AddElsa(options => options
                     .UseYesSqlPersistence(c =>
                         c.UseSqLite("Data Source=elsa_ys.db;Cache=Shared"))
+                    //.UseYesSqlPersistence(c => // does not work because of migration failure (BookmarkIndex)
+                    //    c.UseSqlServer("Server=127.0.0.1,14338;Database=elsa;User=sa;Password=Abcd1234!;Trusted_Connection=false;"))
                     //.UseEntityFrameworkPersistence(c =>
                     //{
                     //    c.UseSqlite(
                     //        "Data Source=elsa_ef.db;Cache=Shared",
                     //        db => db.MigrationsAssembly(typeof(SqliteElsaContextFactory).Assembly.GetName().Name));
                     //}, true)
-                    //.UseEntityFrameworkPersistence(c =>
+                    //.UseEntityFrameworkPersistence(c => 
                     //{
                     //    c.UseSqlServer(
                     //        "Server=127.0.0.1,14338;Database=elsa;User=sa;Password=Abcd1234!;Trusted_Connection=false;",
@@ -57,8 +60,8 @@ namespace Presentation.Web.Server
                     .AddWorkflowsFrom<Program>())
                 .AddDataMigration<Migrations>()
                 .AddIndexProvider<WorkflowStateIndexProvider>()
-                .AddWorkflowContextProvider<WorkflowStateProvider>(); ;
-            //.AddHostedService<WorkflowStarter<DemoWorkflow>>();
+                .AddWorkflowContextProvider<WorkflowStateProvider>();
+                //.AddHostedService<WorkflowStarter<DemoWorkflow>>();
 
             services
                 .AddElsaApiEndpoints()
