@@ -5,11 +5,14 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Elsa" Version="2.0.0-preview7.1561" />
-    <PackageReference Include="Elsa.Activities.Temporal.Quartz" Version="2.0.0-preview7.1561" />
-    <PackageReference Include="Elsa.Persistence.EntityFramework.Sqlite" Version="2.0.0-preview7.1561" />
-    <PackageReference Include="Elsa.Persistence.EntityFramework.SqlServer" Version="2.0.0-preview7.1561" />
-    <PackageReference Include="Elsa.Persistence.YesSql" Version="2.0.0-preview7.1561" />
+    <PackageReference Include="Elsa" Version="2.0.0-preview7.1597" />
+    <PackageReference Include="Elsa.Activities.Temporal.Quartz" Version="2.0.0-preview7.1597" />
+    <PackageReference Include="Elsa.Persistence.EntityFramework.Sqlite" Version="2.0.0-preview7.1597" />
+    <PackageReference Include="Elsa.Persistence.EntityFramework.SqlServer" Version="2.0.0-preview7.1597" />
+    <PackageReference Include="Elsa.Persistence.YesSql" Version="2.0.0-preview7.1597" />
+    <PackageReference Include="Elsa.Server.Api" Version="2.0.0-preview7.1597" />
+    <PackageReference Include="ElsaDashboard.Application" Version="2.0.0-preview7.1597" />
+    <PackageReference Include="ElsaDashboard.Backend" Version="2.0.0-preview7.1597" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="5.0.3" />
     <PackageReference Include="Serilog.AspNetCore" Version="4.0.0" />
     <PackageReference Include="Serilog.Enrichers.Environment" Version="2.1.3" />

@@ -7,6 +7,7 @@
         Rejected,
         Processed,
         Shipped,
-        Delivered
+        Delivered,
+        Done,
     }
 }

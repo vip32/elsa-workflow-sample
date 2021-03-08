@@ -2,13 +2,43 @@ version: '3.7'
 
 services:
 
-    smtp4dev: # https://github.com/rnwood/smtp4dev/blob/master/docker-compose.yml
-        image: rnwood/smtp4dev:linux-amd64-3.1.0-ci0856
-        ports:
-            - "3000:80"
-            - "2525:25"
-        volumes:
-            - smtp4dev-data:/smtp4dev
+  mssql:
+    image: mcr.microsoft.com/mssql/server:2019-latest
+    container_name: elsa_mssql
+    environment:
+      - ACCEPT_EULA=Y
+      - SA_PASSWORD=Abcd1234!
+      - MSSQL_PID=Developer
+    healthcheck:
+      test: /opt/mssql-tools/bin/sqlcmd -S mssql -U SA -P 'Abcd1234!' -Q 'select 1'
+    ports:
+      - 14338:1433
+    volumes:
+      - mssql:/var/opt/mssql
+
+  mssqlscripts:
+    image: mcr.microsoft.com/mssql-tools:latest
+    container_name: elsa_mssqlscripts
+    depends_on:
+      - mssql
+    command: /bin/bash -c 'until /opt/mssql-tools/bin/sqlcmd -S mssql -U sa -P "Abcd1234!" -Q "SELECT @@VERSION"; do sleep 5; done'
+
+  smtp4dev: # https://github.com/rnwood/smtp4dev/blob/master/docker-compose.yml
+    image: rnwood/smtp4dev:linux-amd64-3.1.0-ci0856
+    container_name: elsa_smtp4dev
+    ports:
+      - "3000:80"
+      - "2525:25"
+    volumes:
+      - smtp4dev:/smtp4dev
 
 volumes:
-  smtp4dev-data:
+  mssql:
+    name: elsa_mssql
+    driver: local
+  seq:
+    name: elsa_seq
+    driver: local
+  smtp4dev:
+    name: elsa_smtp4dev
+    driver: local
