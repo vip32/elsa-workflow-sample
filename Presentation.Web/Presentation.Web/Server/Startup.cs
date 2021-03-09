@@ -32,7 +32,7 @@ namespace Presentation.Web.Server
                 .AddElsa(options => options
                     .UseYesSqlPersistence(c =>
                         c.UseSqLite("Data Source=elsa_ys.db;Cache=Shared"))
-                    //.UseYesSqlPersistence(c => // does not work because of migration failure (BookmarkIndex)
+                    //.UseYesSqlPersistence(c => // does not work because of migration failure (BookmarkIndex) > SqlException (0x80131904): Foreign key 'FK_BookmarksBookmarkIndex' references invalid table 'Bookmarks_Document'.
                     //    c.UseSqlServer("Server=127.0.0.1,14338;Database=elsa;User=sa;Password=Abcd1234!;Trusted_Connection=false;"))
                     //.UseEntityFrameworkPersistence(c =>
                     //{

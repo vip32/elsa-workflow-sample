@@ -80,42 +80,42 @@
                     })
                 .Add<Join>(x => x.WithMode(Join.JoinMode.WaitAny)).WithName("Join")
 
-                .Then<Fork>(
-                    fork => fork.WithBranches("Approve", "Reject", "Timer"),
-                    fork =>
-                    {
-                        fork
-                            .When("Approve").SetName("Approve02")
-                            .SignalReceived("approve")
-                            //.Then(ThrowErrorWhenStatusNotNew)
-                            .LogInformation(context => $"WORKFLOW {GetOrder(context).Id} APPROVED01++ (UserId={context.GetVariable<string>("UserId")})")
-                            .Then(context => StoreStatus(context, DemoHttpWorkflowStatus.Approved))
-                            .Then(StoreComment)
-                            //.Then(ThrowErrorIfFinished)
-                            .LogInformation(context => $"APPROVED: {GetOrder(context).Id}")
-                            .Then("Join02");
+                //.Then<Fork>(
+                //    fork => fork.WithBranches("Approve", "Reject", "Timer"),
+                //    fork =>
+                //    {
+                //        fork
+                //            .When("Approve").SetName("Approve02")
+                //            .SignalReceived("approve")
+                //            //.Then(ThrowErrorWhenStatusNotNew)
+                //            .LogInformation(context => $"WORKFLOW {GetOrder(context).Id} APPROVED01++ (UserId={context.GetVariable<string>("UserId")})")
+                //            .Then(context => StoreStatus(context, DemoHttpWorkflowStatus.Approved))
+                //            .Then(StoreComment)
+                //            //.Then(ThrowErrorIfFinished)
+                //            .LogInformation(context => $"APPROVED: {GetOrder(context).Id}")
+                //            .Then("Join02");
 
-                        fork
-                            .When("Reject").SetName("Reject03")
-                            .SignalReceived("reject")
-                            //.Then(ThrowErrorWhenStatusNotNew)
-                            .LogInformation(context => $"WORKFLOW {GetOrder(context).Id} REJECTED02-- (UserId={context.GetVariable<string>("UserId")})")
-                            .Then(context => StoreStatus(context, DemoHttpWorkflowStatus.Rejected))
-                            .Then(StoreComment)
-                            //.Then(ThrowErrorIfFinished)
-                            .LogInformation(context => $"REJECTED: {GetOrder(context).Id}")
-                            .Then("Join02");
+                //        fork
+                //            .When("Reject").SetName("Reject03")
+                //            .SignalReceived("reject")
+                //            //.Then(ThrowErrorWhenStatusNotNew)
+                //            .LogInformation(context => $"WORKFLOW {GetOrder(context).Id} REJECTED02-- (UserId={context.GetVariable<string>("UserId")})")
+                //            .Then(context => StoreStatus(context, DemoHttpWorkflowStatus.Rejected))
+                //            .Then(StoreComment)
+                //            //.Then(ThrowErrorIfFinished)
+                //            .LogInformation(context => $"REJECTED: {GetOrder(context).Id}")
+                //            .Then("Join02");
 
-                        //fork
-                        //    .When("Timer")
-                        //    .Timer(this.timeOut)
-                        //    .LogInformation(context => $"WORKFLOW {GetOrder(context).Id} TIMEOUT--")
-                        //    .Then(context => StoreStatus(context, DemoHttpWorkflowStatus.Rejected))
-                        //    .Then(StoreApproveTimeoutComment)
-                        //    .SetVariable("RejectedBy", "Timer")
-                        //    .Then("Join02");
-                    })
-                .Add<Join>(x => x.WithMode(Join.JoinMode.WaitAny)).WithName("Join02")
+                //        //fork
+                //        //    .When("Timer")
+                //        //    .Timer(this.timeOut)
+                //        //    .LogInformation(context => $"WORKFLOW {GetOrder(context).Id} TIMEOUT--")
+                //        //    .Then(context => StoreStatus(context, DemoHttpWorkflowStatus.Rejected))
+                //        //    .Then(StoreApproveTimeoutComment)
+                //        //    .SetVariable("RejectedBy", "Timer")
+                //        //    .Then("Join02");
+                //    })
+                //.Add<Join>(x => x.WithMode(Join.JoinMode.WaitAny)).WithName("Join02")
 
                 .LogInformation(context => $"Finished order for {GetOrder(context).Name} ({GetOrder(context).Email}, Status={GetState(context).Status})")
                 .Then(context => StoreStatus(context, DemoHttpWorkflowStatus.Done))
