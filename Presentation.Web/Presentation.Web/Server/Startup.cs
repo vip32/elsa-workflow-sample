@@ -57,11 +57,11 @@ namespace Presentation.Web.Server
                     .AddEmailActivities(this.Configuration.GetSection("Elsa").GetSection("Smtp").Bind)
                     .AddQuartzTemporalActivities()
                     .AddActivitiesFrom<Program>()
-                    .AddWorkflowsFrom<Program>());
-                //.AddDataMigration<Migrations>() // yessql
-                //.AddIndexProvider<WorkflowStateIndexProvider>() yessql
-                //.AddWorkflowContextProvider<WorkflowStateProvider>(); yessql
-                //.AddHostedService<WorkflowStarter<DemoWorkflow>>(); yessql
+                    .AddWorkflowsFrom<Program>())
+                .AddDataMigration<Migrations>() // yessql
+                .AddIndexProvider<WorkflowStateIndexProvider>() // yessql
+                .AddWorkflowContextProvider<WorkflowStateProvider>(); // yessql
+                //.AddHostedService<WorkflowStarter<DemoWorkflow>>();
 
             services
                 .AddElsaApiEndpoints()
